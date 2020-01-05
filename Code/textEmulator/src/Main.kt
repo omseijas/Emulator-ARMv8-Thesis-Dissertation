@@ -1,4 +1,5 @@
 import utils.Registers
+var registers : Registers = Registers()
 
 fun main(args: Array<String>) {
     val stringInput = readLine()!!
@@ -14,6 +15,9 @@ open class Instruction() {
         var newString: MutableList<String> = mutableListOf()
         var i = 0
 
+        registers.setValueRegister("X1",true,"22")
+        registers.setValueRegister("X2",true,"25")
+        registers.setValueRegister("X3",true,"0")
         when (string[0]) {
             "ADD" -> {
                 for (i in 0..string.size - 1) {
@@ -47,21 +51,6 @@ open class Instruction() {
         return ""
     }
 
-    //Thirty-one 64-bit general-purpose registers X0-X30
-    fun checkIfRegister(possibleRegister: String): String {
-        if (possibleRegister[0].equals("X")) {
-            if (possibleRegister[1].isDigit()) {
-                if (possibleRegister.length > 2) {
-                    if (possibleRegister[2].isDigit() && (possibleRegister[1] == '1' || possibleRegister[1] == '2' ||
-                                possibleRegister[1] == '3')) {
-                        val reg: Registers = Registers(possibleRegister)
-                        return reg.getValueRegister()
-                    }
-                }
-            }
-        }
-        return possibleRegister
-    }
 
     open fun part() {}
 
@@ -69,8 +58,8 @@ open class Instruction() {
 
 class InstructionAdd(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = checkIfRegister(source1) //if it is not a register, it should be a number.
-        var s2 = checkIfRegister(source2)
+        var s1 = registers.getValueRegister(source1) //if it is not a register, it should be a number.
+        var s2 = registers.getValueRegister(source2)
         val sum = s1.toInt() + s2.toInt()
 
         println("NEW VALUE: $sum IN $dest")
@@ -80,8 +69,8 @@ class InstructionAdd(instruction: List<String>) : Instruction() {
 
 class InstructionSub(instruction: List<String>): Instruction(){
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = checkIfRegister(source1) //if it is not a register, it should be a number.
-        var s2 = checkIfRegister(source2)
+        var s1 =  registers.getValueRegister(source1) //if it is not a register, it should be a number.
+        var s2 =  registers.getValueRegister(source2)
         val substraction = s1.toInt() - s2.toInt()
 
         println("NEW VALUE: $substraction IN $dest")
@@ -91,7 +80,7 @@ class InstructionSub(instruction: List<String>): Instruction(){
 
 class InstructionAddI(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = checkIfRegister(source1)
+        var s1 =  registers.getValueRegister(source1)
         val sum = s1.toInt() + source2.toInt()
 
         println("NEW VALUE: $sum IN $dest")
@@ -101,7 +90,7 @@ class InstructionAddI(instruction: List<String>) : Instruction() {
 
 class InstructionSubI(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = checkIfRegister(source1)
+        var s1 =  registers.getValueRegister(source1)
         val sub = s1.toInt() - source2.toInt()
 
         println("NEW VALUE: $sub IN $dest")
