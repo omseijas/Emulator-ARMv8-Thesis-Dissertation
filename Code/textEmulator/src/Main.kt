@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
     val i = Instruction()
     i.classify(stringInput[0])
     val fileName = "resultado.txt"
-    val fileCode= File(fileName)
+    val fileCode = File(fileName)
     fileCode.writeText(stringInput[0])
 
 }
@@ -58,8 +58,15 @@ open class Instruction() {
                 for (i in 0..string.size - 1) {
                     newString.add(i, (string[i].replace(",* *".toRegex(), "")))
                 }
-                val instructionMult: InstructionSubI = InstructionSubI(newString)
-                resolution = instructionMult.runInstruction(newString[1], newString[2], newString[3])
+                val onstruction: InstructionSubI = InstructionSubI(newString)
+                resolution = onstruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+            "SUBS" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+                }
+                val onstruction = InstructionSubS(newString)
+                resolution = onstruction.runInstruction(newString[1], newString[2], newString[3])
             }
         }
         return resolution
@@ -110,6 +117,17 @@ class InstructionAddI(instruction: List<String>) : Instruction() {
 class InstructionSubI(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
         var s1 = registers.getValueRegister(source1)
+        val sub = s1.toInt() - source2.toInt()
+
+        println("NEW VALUE: $sub IN $dest")
+        return sub.toString()
+    }
+}
+
+class InstructionSubS(instruction: List<String>) : Instruction() {
+    override fun runInstruction(dest: String, source1: String, source2: String): String {
+        var s1 = registers.getValueRegister(source1)
+        var s2 = registers.getValueRegister(source2)
         val sub = s1.toInt() - source2.toInt()
 
         println("NEW VALUE: $sub IN $dest")
