@@ -1,8 +1,5 @@
-import com.sun.xml.internal.ws.api.ha.StickyFeature
 import utils.Registers
-import java.io.BufferedReader
 import java.io.File
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 var registers: Registers = Registers()
 val memArmv8 = List(4096){""}
@@ -32,6 +29,7 @@ fun main(args: Array<String>) {
     registers.setValueRegister("X3", true, "29")
     println(i.classify(stringInput[0]))
     println(i.classify(stringInput[1]))
+    println(i.classify(stringInput[2]))
     val fileName = "resultado.txt"
     val fileCode = File(fileName)
   //  fileCode.writeText(stringInput[0])
@@ -92,9 +90,9 @@ open class Instruction() {
             }
             "STDUR" -> {
                 for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?#\\]?".toRegex(), "")))
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
                 }
-                val instruction = InstructionLDUR(newString)
+                val instruction = InstructionSTUR(newString)
                 resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
             }
 
@@ -117,7 +115,7 @@ class InstructionAdd(instruction: List<String>) : Instruction() {
         var s1 = registers.getValueRegister(source1) //if it is not a register, it should be a number.
         var s2 = registers.getValueRegister(source2)
         val sum = s1.toInt() + s2.toInt()
-
+        registers.setValueRegister(dest,true,sum.toString())
         println("NEW VALUE: $sum IN $dest")
         return sum.toString()
     }
@@ -128,7 +126,7 @@ class InstructionSub(instruction: List<String>) : Instruction() {
         var s1 = registers.getValueRegister(source1) //if it is not a register, it should be a number.
         var s2 = registers.getValueRegister(source2)
         val substraction = s1.toInt() - s2.toInt()
-
+        registers.setValueRegister(dest,true,substraction.toString())
         println("NEW VALUE: $substraction IN $dest")
         return substraction.toString()
     }
@@ -138,6 +136,7 @@ class InstructionAddI(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
         var s1 = registers.getValueRegister(source1)
         val sum = s1.toInt() + source2.toInt()
+        registers.setValueRegister(dest,true,sum.toString())
 
         println("NEW VALUE: $sum IN $dest")
         return sum.toString()
@@ -148,7 +147,7 @@ class InstructionSubI(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
         var s1 = registers.getValueRegister(source1)
         val sub = s1.toInt() - source2.toInt()
-
+        registers.setValueRegister(dest,true,sub.toString())
         println("NEW VALUE: $sub IN $dest")
         return sub.toString()
     }
@@ -173,6 +172,16 @@ class InstructionLDUR(instruction: List<String>) : Instruction(){
         return value +"in "+dest
     }
 }
+//As of now, I wont touch the offset.
+class InstructionSTUR(instruction: List<String>) : Instruction(){
+    override fun runInstruction(source: String, dest1: String, dest2: String): String {
+        val value = registers.getValueRegister(source)
+
+        registers.setValueRegister(dest1,true,value)
+        return value +" in "+dest1
+    }
+}
+
 
 
 class DecimalRepresentation(instruction: String){
