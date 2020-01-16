@@ -1,18 +1,16 @@
-import javafx.scene.control.Label
-import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
-import javafx.scene.paint.Color
+import javafx.stage.FileChooser
 import javafx.stage.Stage
 import tornadofx.*
-import tornadofx.Stylesheet.Companion.menu
+
 
 class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
     override val root = vbox(){
         menubar {
             menu("Archivo") {
-                item("Abrir", "ctrl + a")
+                item("Abrir", "ctrl + a").action { openFile() }
                 item("Nuevo", "ctrl + n")
-                item("Guardar", "ctrl + g")
+                item("Guardar", "ctrl + g").action { saveFile() }
             }
             menu("Ejecutar") {
                 item("Paso a paso")
@@ -58,4 +56,15 @@ class HelloWorldApp : App(HelloWorld::class) {
 
         super.start(stage)
     }
+}
+
+fun openFile(){
+    val fileChooser = FileChooser()
+    val selectedFile = fileChooser.showOpenDialog(null)
+
+}
+
+fun saveFile(){
+    val fileChooser = FileChooser()
+    val selectedFile = fileChooser.showSaveDialog(null)
 }
