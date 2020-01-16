@@ -2,8 +2,21 @@ import com.sun.xml.internal.ws.api.ha.StickyFeature
 import utils.Registers
 import java.io.BufferedReader
 import java.io.File
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 var registers: Registers = Registers()
+val memArmv8 = List(4096){""}
+var stackPointerArmv8 : Int = 0
+
+fun getPositionRegister(name:String, offset:String):Int{
+    var value = name.removePrefix("X").toInt()
+    return value * 8 + offset.removePrefix("#").toInt() * 8
+}
+
+fun getValueFromPosition(name:String, offset: String):String{
+    var value = getPositionRegister(name,offset)/8
+    return registers.getValueRegister("X"+value)
+}
 
 fun main(args: Array<String>) {
     var stringInput = mutableListOf<String>()
@@ -14,10 +27,14 @@ fun main(args: Array<String>) {
     }
     println("Has introducido: $stringInput")
     val i = Instruction()
-    i.classify(stringInput[0])
+    registers.setValueRegister("X1", true, "22")
+    registers.setValueRegister("X2", true, "25")
+    registers.setValueRegister("X3", true, "29")
+    println(i.classify(stringInput[0]))
+    println(i.classify(stringInput[1]))
     val fileName = "resultado.txt"
     val fileCode = File(fileName)
-    fileCode.writeText(stringInput[0])
+  //  fileCode.writeText(stringInput[0])
 
 }
 
@@ -29,9 +46,7 @@ open class Instruction() {
         var newString: MutableList<String> = mutableListOf()
         var i = 0
 
-        registers.setValueRegister("X1", true, "22")
-        registers.setValueRegister("X2", true, "25")
-        registers.setValueRegister("X3", true, "0")
+
         when (string[0]) {
             "ADD" -> {
                 for (i in 0..string.size - 1) {
@@ -68,6 +83,21 @@ open class Instruction() {
                 val onstruction = InstructionSubS(newString)
                 resolution = onstruction.runInstruction(newString[1], newString[2], newString[3])
             }
+            "LDUR" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionLDUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+            "STDUR" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?#\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionLDUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+
         }
         return resolution
     }
@@ -133,4 +163,21 @@ class InstructionSubS(instruction: List<String>) : Instruction() {
         println("NEW VALUE: $sub IN $dest")
         return sub.toString()
     }
+}
+//LDUR/STUR allow accessing 32/64-bit values when they are not aligned to the size of the operand.
+// For example, a 32-bit value stored at address 0x52.
+class InstructionLDUR(instruction: List<String>) : Instruction(){
+    override fun runInstruction(dest: String, source1: String, source2: String): String {
+        val value = getValueFromPosition(source1,source2)
+        registers.setValueRegister(dest,true,value)
+        return value +"in "+dest
+    }
+}
+
+
+class DecimalRepresentation(instruction: String){
+
+}
+class BecimalRepresentation(instruction: String){
+
 }
