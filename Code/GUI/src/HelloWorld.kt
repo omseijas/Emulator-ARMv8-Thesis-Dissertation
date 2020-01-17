@@ -1,18 +1,24 @@
+import javafx.geometry.Side
+import javafx.scene.control.TextArea
 import javafx.scene.layout.Priority
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import tornadofx.*
+import java.io.File
 
+var stringInput = mutableListOf<String>()
+var textArea = TextArea()
 
 class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
     override val root = vbox(){
         menubar {
             menu("Archivo") {
-                item("Abrir", "ctrl + a").action { openFile() }
-                item("Nuevo", "ctrl + n")
-                item("Guardar", "ctrl + g").action { saveFile() }
+                item("Abrir", "Ctrl+A").action { openFile() }
+           //     item("Nuevo", "Ctrl+N")
+                item("Guardar", "Ctrl+G").action { saveFile() }
             }
             menu("Ejecutar") {
+                item("Ejecutar","Ctrl+E")
                 item("Paso a paso")
                 item("Detener")
             }
@@ -22,22 +28,26 @@ class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
         }
         gridpane {
             row {
-                button("Abrir")
-                button("Guardar")
+                button("Abrir").action { openFile() }
+                button("Guardar").action { saveFile() }
                 button("Ejecutar")
                 button("Paso a paso")
                 button("Detener")
             }
 
         }
-        squeezebox {
-            fold("Código", expanded = true) {
+        drawer(Side.LEFT, true) {
+            item("Código", expanded = true) {
                 textarea {
+                    textArea = this
                     prefRowCount = 25
                     vgrow = Priority.ALWAYS
+  //                 bind(observableListOf(stringInput))
+ //                  textProperty().bind(.textPropecty())
+
                 }
             }
-            fold("Registros", expanded = true) {
+            item("Registros", expanded = true) {
                 stackpane {
                     label("Registros")
                 }
@@ -61,6 +71,19 @@ class HelloWorldApp : App(HelloWorld::class) {
 fun openFile(){
     val fileChooser = FileChooser()
     val selectedFile = fileChooser.showOpenDialog(null)
+    if (selectedFile != null) {
+
+        File(selectedFile.absolutePath).forEachLine {
+            stringInput.add(
+                it
+            )
+        }
+        stringInput.forEach {textArea.appendText(it+"\n")  }
+
+    }
+    else {
+        println("File selection cancelled.");
+    }
 
 }
 
