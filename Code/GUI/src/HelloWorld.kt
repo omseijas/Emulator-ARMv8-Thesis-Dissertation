@@ -5,6 +5,7 @@ import javafx.stage.FileChooser
 import javafx.stage.Stage
 import tornadofx.*
 import java.io.File
+import java.io.PrintWriter
 
 var stringInput = mutableListOf<String>()
 var textArea = TextArea()
@@ -89,5 +90,15 @@ fun openFile(){
 
 fun saveFile(){
     val fileChooser = FileChooser()
+    val extensionFilterArmv8 = FileChooser.ExtensionFilter("Archivos TXT (*.txt)", "*.txt")
+    fileChooser.extensionFilters.add(extensionFilterArmv8)
     val selectedFile = fileChooser.showSaveDialog(null)
+    if (selectedFile != null) {
+        var writer = PrintWriter(selectedFile)
+        writer.println(textArea.text)
+        writer.close()
+    }
+    else {
+        println("File selection cancelled.");
+    }
 }
