@@ -1,5 +1,6 @@
 import utils.Registers
 import java.io.File
+import java.lang.Exception
 
 var registers: Registers = Registers()
 val memArmv8 = List(4096){""}
@@ -24,15 +25,19 @@ fun main(args: Array<String>) {
     }
     println("Has introducido: $stringInput")
     val i = Instruction()
-    registers.setValueRegister("X1", true, "22")
-    registers.setValueRegister("X2", true, "25")
-    registers.setValueRegister("X3", true, "29")
-    println(i.classify(stringInput[0]))
-    println(i.classify(stringInput[1]))
-    println(i.classify(stringInput[2]))
+    var j =0
+    try {
+        for(input in stringInput){
+            println(i.classify(input))
+        }
+    }
+        catch(e:Exception){
+            print(e.message)
+        }
     val fileName = "resultado.txt"
     val fileCode = File(fileName)
-  //  fileCode.writeText(stringInput[0])
+    registers.listofRegisters.forEach { print("""${it?.nameRegisters}:${it?.valueRegister} ||| """) }
+ //   fileCode.writeText(stringInput[0])
 
 }
 
@@ -81,6 +86,8 @@ open class Instruction() {
                 val onstruction = InstructionSubS(newString)
                 resolution = onstruction.runInstruction(newString[1], newString[2], newString[3])
             }
+
+            /*TO DO*/
             "LDUR" -> {
                 for (i in 0..string.size - 1) {
                     newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
@@ -95,7 +102,72 @@ open class Instruction() {
                 val instruction = InstructionSTUR(newString)
                 resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
             }
+            "ORR" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionORR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
 
+            "EOR" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionSTUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+
+            "AND" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionAND(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+
+            "NOT" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionSTUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+            "CBZ" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionSTUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+            "CBNZ" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionSTUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+            "B.cond" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionSTUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+            "B" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionSTUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
+            "BR" -> {
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                val instruction = InstructionSTUR(newString)
+                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+            }
         }
         return resolution
     }
@@ -182,6 +254,34 @@ class InstructionSTUR(instruction: List<String>) : Instruction(){
     }
 }
 
+class InstructionCBZ(instruction: List<String>):Instruction(){}
+class InstructionCBNZ(instruction: List<String>):Instruction(){}
+class InstructionBCond(instruction: List<String>):Instruction(){}
+class InstructionAND(instruction: List<String>):Instruction(){
+    override fun runInstruction(dest: String, source1: String, source2: String): String {
+        var s1 = registers.getValueRegister(source1)
+        var s2 = registers.getValueRegister(source2)
+        val sub = s1.toInt() and s2.toInt()
+
+        println("NEW VALUE: $sub IN $dest")
+        return sub.toString()
+    }
+}
+
+class InstructionORR(instruction: List<String>):Instruction(){
+    override fun runInstruction(dest: String, source1: String, source2: String): String {
+        var s1 = registers.getValueRegister(source1)
+        var s2 = registers.getValueRegister(source2)
+        val sub = s1.toInt() or s2.toInt()
+
+        println("NEW VALUE: $sub IN $dest")
+        return sub.toString()
+    }
+}
+class InstructionEOR(instruction: List<String>):Instruction(){}
+class InstructionNOT(instruction: List<String>):Instruction(){}
+class InstructionB(instruction: List<String>):Instruction(){}
+class InstructionBR(instruction: List<String>):Instruction(){}
 
 
 class DecimalRepresentation(instruction: String){
