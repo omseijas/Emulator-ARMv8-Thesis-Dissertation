@@ -1,21 +1,33 @@
+import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.collections.FXCollections
 import javafx.geometry.Side
 import javafx.scene.control.TextArea
 import javafx.scene.layout.Priority
+import javafx.scene.paint.Color
+import javafx.scene.paint.Color.*
+import javafx.scene.text.FontWeight
+import javafx.scene.text.FontWeight.*
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import tornadofx.*
 import java.io.File
 import java.io.PrintWriter
+import ARMv8_Architecture.Instruction
+import utils.Registers
+var registers: Registers = Registers()
 
 var stringInput = mutableListOf<String>()
 var textArea = TextArea()
+val contador = SimpleStringProperty()
 
 class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
+    val controller : USCLEGController by inject()
     override val root = vbox(){
+        importStylesheet("C:\\Users\\Zezão\\Desktop\\Manu\\Trabajo-de-fin-de-grado\\Code\\GUI\\tyle.css")
         menubar {
             menu("Archivo") {
                 item("Abrir", "Ctrl+A").action { openFile() }
-           //     item("Nuevo", "Ctrl+N")
                 item("Guardar", "Ctrl+G").action { saveFile() }
             }
             menu("Ejecutar") {
@@ -31,7 +43,7 @@ class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
             row {
                 button("Abrir").action { openFile() }
                 button("Guardar").action { saveFile() }
-                button("Ejecutar")
+                button("Ejecutar").action{controller.increment()}
                 button("Paso a paso")
                 button("Detener")
             }
@@ -50,7 +62,11 @@ class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
             }
             item("Registros", expanded = true) {
                 stackpane {
-                    label("Registros")
+                    listview(controller.values)
+                    label(){
+                        bind(contador)
+
+                    }
                 }
             }
         }
@@ -58,7 +74,16 @@ class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
     }
 }
 
+class USCLEGController:Controller(){
+    fun increment(){
+        contador
+//        values.set(0,values.get(0)+"x")
+        println(registers.getValues())
+    }
 
+    val values = FXCollections.observableArrayList(registers.getValues()   )
+
+}
 
 class HelloWorldApp : App(HelloWorld::class) {
     override fun start(stage: Stage) {

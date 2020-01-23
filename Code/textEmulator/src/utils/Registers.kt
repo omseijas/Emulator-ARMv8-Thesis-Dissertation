@@ -1,5 +1,6 @@
 package utils
 
+import javafx.collections.FXCollections.observableArrayList
 import java.lang.Exception
 
 //Registers are size 64 bits
@@ -38,6 +39,13 @@ class Registers {
     fun getValueRegister(name: String): String {
         val value = listofRegisters.filter {it!!.getNameRegister() == name}.get(0)?.valueRegister
         return value!!
+    }
+
+    fun getValues(): List<String> {
+        var valuelistregisters = mutableListOf<String>()
+        for(i in listofRegisters)
+            valuelistregisters.add(i!!.nameRegisters +" "+i!!.valueRegister)
+        return valuelistregisters
     }
 
 
