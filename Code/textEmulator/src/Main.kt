@@ -3,21 +3,25 @@ import java.io.File
 import java.lang.Exception
 
 var registers: Registers = Registers()
-val memArmv8 = List(4096){""}
+var memArmv8 = arrayOfNulls<Byte>(4096) //Memory is in bytes.
 var stackPointerArmv8 : Int = 0
 
-fun getPositionRegister(name:String, offset:String):Int{
-    var value = name.removePrefix("X").toInt()
-    return value * 8 + offset.removePrefix("#").toInt() * 8
-}
 
-fun getValueFromPosition(name:String, offset: String):String{
-    var value = getPositionRegister(name,offset)/8
-    return registers.getValueRegister("X"+value)
+fun getValueFromPosition(name:String, off: String):Byte{
+    var position = registers.getValueRegister(name)
+
+    var offset = off.removePrefix("#").toInt() / 8
+    position += offset
+    return memArmv8.get(position.toInt())!!
 }
 
 fun main(args: Array<String>) {
     var stringInput = mutableListOf<String>()
+    var initializeMemoryAt0=0
+    for (initializeMemoryAt0 in 0 until memArmv8.size){
+        memArmv8[initializeMemoryAt0]=0
+    }
+
     File("C:\\Users\\Zezão\\Desktop\\Manu\\Trabajo-de-fin-de-grado\\Code\\textEmulator\\src\\test.txt").forEachLine {
         stringInput.add(
             it
@@ -36,8 +40,15 @@ fun main(args: Array<String>) {
         }
     val fileName = "resultado.txt"
     val fileCode = File(fileName)
-    registers.listofRegisters.forEach { print("""${it?.nameRegisters}:${it?.valueRegister} ||| """) }
- //   fileCode.writeText(stringInput[0])
+    registers.listofRegisters.forEach { print("${it?.nameRegisters}:${it?.valueRegister} \n") }
+    println("MEMORY")
+    for (initializeMemoryAt0 in 0 until memArmv8.size){
+        if(memArmv8[initializeMemoryAt0]!! != 0.toByte()){
+            println(memArmv8[initializeMemoryAt0].toString() + " in $initializeMemoryAt0")
+        }
+    }
+
+    //   fileCode.writeText(stringInput[0])
 
 }
 
@@ -114,7 +125,7 @@ open class Instruction() {
                 for (i in 0..string.size - 1) {
                     newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
                 }
-                val instruction = InstructionSTUR(newString)
+                val instruction = InstructionEOR(newString)
                 resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
             }
 
@@ -235,28 +246,8 @@ class InstructionSubS(instruction: List<String>) : Instruction() {
         return sub.toString()
     }
 }
-//LDUR/STUR allow accessing 32/64-bit values when they are not aligned to the size of the operand.
-// For example, a 32-bit value stored at address 0x52.
-class InstructionLDUR(instruction: List<String>) : Instruction(){
-    override fun runInstruction(dest: String, source1: String, source2: String): String {
-        val value = getValueFromPosition(source1,source2)
-        registers.setValueRegister(dest,true,value)
-        return value +"in "+dest
-    }
-}
-//As of now, I wont touch the offset.
-class InstructionSTUR(instruction: List<String>) : Instruction(){
-    override fun runInstruction(source: String, dest1: String, dest2: String): String {
-        val value = registers.getValueRegister(source)
 
-        registers.setValueRegister(dest1,true,value)
-        return value +" in "+dest1
-    }
-}
 
-class InstructionCBZ(instruction: List<String>):Instruction(){}
-class InstructionCBNZ(instruction: List<String>):Instruction(){}
-class InstructionBCond(instruction: List<String>):Instruction(){}
 class InstructionAND(instruction: List<String>):Instruction(){
     override fun runInstruction(dest: String, source1: String, source2: String): String {
         var s1 = registers.getValueRegister(source1)
@@ -278,11 +269,42 @@ class InstructionORR(instruction: List<String>):Instruction(){
         return sub.toString()
     }
 }
-class InstructionEOR(instruction: List<String>):Instruction(){}
-class InstructionNOT(instruction: List<String>):Instruction(){}
+class InstructionEOR(instruction: List<String>):Instruction(){
+    override fun runInstruction(dest: String, source1: String, source2: String): String {
+        var s1 = registers.getValueRegister(source1)
+        var s2 = registers.getValueRegister(source2)
+        val sub = s1.toInt() xor s2.toInt()
+
+        println("NEW VALUE: $sub IN $dest")
+        return sub.toString()
+    }
+}
+
 class InstructionB(instruction: List<String>):Instruction(){}
 class InstructionBR(instruction: List<String>):Instruction(){}
+class InstructionCBZ(instruction: List<String>):Instruction(){}
+class InstructionCBNZ(instruction: List<String>):Instruction(){}
+class InstructionBCond(instruction: List<String>):Instruction(){}
+//LDUR/STUR allow accessing 32/64-bit values when they are not aligned to the size of the operand.
+// For example, a 32-bit value stored at address 0x52.
+class InstructionLDUR(instruction: List<String>) : Instruction(){
+    override fun runInstruction(dest: String, source1: String, source2: String): String {
+        val value = getValueFromPosition(source1,source2)
 
+        registers.setValueRegister(dest,true,value.toString())
+        println("NEW VALUE: $value IN $dest")
+        return value.toString()
+    }
+}
+//As of now, I wont touch the offset.
+class InstructionSTUR(instruction: List<String>) : Instruction(){
+    override fun runInstruction(source: String, dest: String, offset: String): String {
+        var position= registers.getValueRegister(source).toInt()
+        position += offset.removePrefix("#").toInt() / 8
+        memArmv8[position] = registers.getValueRegister(source).toByte()
+        return source +" in "+dest
+    }
+}
 
 class DecimalRepresentation(instruction: String){
 
