@@ -25,9 +25,7 @@ fun main(args: Array<String>) {
     val i = Instruction()
     var j =0
     try {
-        for(input in stringInput){
-            println(i.classify(input))
-        }
+        i.classifyAllInput(stringInput)
     }
         catch(e:Exception){
             print(e.message)
