@@ -1,8 +1,8 @@
 package ARMv8_Architecture
 
-import registers
 import utils.ARMv8Function
 import utils.Constants
+import utils.Registers
 import java.lang.Exception
 
 var memArmv8 = arrayOfNulls<Byte>(4096) //Memory is in bytes.
@@ -23,8 +23,10 @@ var keyWords = mutableListOf<String>(
     Constants.SUBI
 )
 var numberLines = 0
+var registersList: Registers = Registers()
+
 fun getValueFromPosition(name: String, off: String): Byte {
-    var position = registers.getValueRegister(name)
+    var position = registersList.getValueRegister(name)
 
     var offset = off.removePrefix("#").toInt() / 8
     position += offset
@@ -49,18 +51,19 @@ open class Memory() {
 }
 
 open class Instruction() {
+
+    var numberLine: Int = numberLines
     var readAllInput = false
 
 
-    fun classify(stringToClassify: String): String {
+    fun classify(stringToClassify: String, registers: Registers): String {
         var string = stringToClassify.split(' ')
         var resolution = ""
         var newString: MutableList<String> = mutableListOf()
         var i = 0
-
-
+        registersList = registers
+        try{
         when (string[0]) {
-
             Constants.ADD -> {
                 for (i in 0..string.size - 1) {
                     newString.add(i, (string[i].replace(",* *".toRegex(), "")))
@@ -154,13 +157,27 @@ open class Instruction() {
                 val instruction = InstructionB(newString)
                 resolution = instruction.runInstruction(newString[1])
             }
+            "" -> {
 
+            }
             else -> {
-                classify(checkForVariable(string))
+                for (i in 0..string.size - 1) {
+                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                }
+                if(newString.size == 5){
+                classify(checkForVariable(string), registers)
+                numberLines--}
+                else{
+                    throw Exception("Cadena mal formada:"+string)
+                }
 
             }
         }
-
+        numberLines++
+        numberLine = numberLines}
+        catch (e : Exception){
+            throw Exception(e.message)
+        }
         return resolution
     }
 
@@ -187,25 +204,29 @@ open class Instruction() {
         return ""
     }
 
-
-    fun classifyAllInput(stringInput: MutableList<String>) {
-        for (input in stringInput) {
-            if (input != "") {
-                var string = input.split(' ')
+    fun checkForVariables(stringInput: MutableList<String>, numberLine: Int) {
+        numberLines = numberLine
+        for(i in numberLine until stringInput.size){
+                var string = stringInput[i].split(' ')
                 var resolution = ""
                 var i = 0
                 if (!keyWords.contains(string[0]))
                     checkForVariable(string)
-            }
             numberLines++
 
         }
         numberLines = 0
+    }
+
+    fun classifyAllInput(stringInput: MutableList<String>, registers: Registers) {
+        registersList = registers
+        checkForVariables(stringInput, 0)
+        numberLines = 0
         while (!readAllInput) {
             if (stringInput.get(numberLines) != "") {
-                println(classify(stringInput.get(numberLines)))
+                println(classify(stringInput.get(numberLines), registersList))
             }
-                numberLines++
+     //       numberLines++
             if (numberLines == stringInput.size)
                 readAllInput = true
         }
@@ -218,14 +239,22 @@ open class Instruction() {
     open fun runInstruction(toCompare: String, dest: String): String {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
+    fun reset() {
+        registersList = Registers()
+        numberLines = 0
+        for (initializeMemoryAt0 in 0 until memArmv8.size) {
+            memArmv8[initializeMemoryAt0] = 0
+        }
+    }
 }
 
 class InstructionAdd(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = registers.getValueRegister(source1) //if it is not a register, it should be a number.
-        var s2 = registers.getValueRegister(source2)
+        var s1 = registersList.getValueRegister(source1) //if it is not a register, it should be a number.
+        var s2 = registersList.getValueRegister(source2)
         val sum = s1.toInt() + s2.toInt()
-        registers.setValueRegister(dest, true, sum.toString())
+        registersList.setValueRegister(dest, true, sum.toString())
         println("NEW VALUE: $sum IN $dest")
         return sum.toString()
     }
@@ -233,10 +262,10 @@ class InstructionAdd(instruction: List<String>) : Instruction() {
 
 class InstructionSub(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = registers.getValueRegister(source1) //if it is not a register, it should be a number.
-        var s2 = registers.getValueRegister(source2)
+        var s1 = registersList.getValueRegister(source1) //if it is not a register, it should be a number.
+        var s2 = registersList.getValueRegister(source2)
         val substraction = s1.toInt() - s2.toInt()
-        registers.setValueRegister(dest, true, substraction.toString())
+        registersList.setValueRegister(dest, true, substraction.toString())
         println("NEW VALUE: $substraction IN $dest")
         return substraction.toString()
     }
@@ -244,9 +273,9 @@ class InstructionSub(instruction: List<String>) : Instruction() {
 
 class InstructionAddI(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = registers.getValueRegister(source1)
+        var s1 = registersList.getValueRegister(source1)
         val sum = s1.toInt() + source2.toInt()
-        registers.setValueRegister(dest, true, sum.toString())
+        registersList.setValueRegister(dest, true, sum.toString())
 
         println("NEW VALUE: $sum IN $dest")
         return sum.toString()
@@ -255,9 +284,9 @@ class InstructionAddI(instruction: List<String>) : Instruction() {
 
 class InstructionSubI(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = registers.getValueRegister(source1)
+        var s1 = registersList.getValueRegister(source1)
         val sub = s1.toInt() - source2.toInt()
-        registers.setValueRegister(dest, true, sub.toString())
+        registersList.setValueRegister(dest, true, sub.toString())
         println("NEW VALUE: $sub IN $dest")
         return sub.toString()
     }
@@ -266,10 +295,10 @@ class InstructionSubI(instruction: List<String>) : Instruction() {
 
 class InstructionAND(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = registers.getValueRegister(source1)
-        var s2 = registers.getValueRegister(source2)
+        var s1 = registersList.getValueRegister(source1)
+        var s2 = registersList.getValueRegister(source2)
         val sub = s1.toInt() and s2.toInt()
-        registers.setValueRegister(dest,true,sub.toString())
+        registersList.setValueRegister(dest, true, sub.toString())
         println("NEW VALUE: $sub IN $dest")
         return sub.toString()
     }
@@ -277,10 +306,10 @@ class InstructionAND(instruction: List<String>) : Instruction() {
 
 class InstructionORR(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = registers.getValueRegister(source1)
-        var s2 = registers.getValueRegister(source2)
+        var s1 = registersList.getValueRegister(source1)
+        var s2 = registersList.getValueRegister(source2)
         val sub = s1.toInt() or s2.toInt()
-        registers.setValueRegister(dest,true,sub.toString())
+        registersList.setValueRegister(dest, true, sub.toString())
         println("NEW VALUE: $sub IN $dest")
         return sub.toString()
     }
@@ -288,10 +317,10 @@ class InstructionORR(instruction: List<String>) : Instruction() {
 
 class InstructionEOR(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
-        var s1 = registers.getValueRegister(source1)
-        var s2 = registers.getValueRegister(source2)
+        var s1 = registersList.getValueRegister(source1)
+        var s2 = registersList.getValueRegister(source2)
         val sub = s1.toInt() xor s2.toInt()
-        registers.setValueRegister(dest,true,sub.toString())
+        registersList.setValueRegister(dest, true, sub.toString())
         println("NEW VALUE: $sub IN $dest")
         return sub.toString()
     }
@@ -309,7 +338,7 @@ class InstructionB(instruction: List<String>) : Instruction() {
 
 class InstructionCBZ(instruction: List<String>) : Instruction() {
     override fun runInstruction(toCompare: String, dest: String): String {
-        val valueToCompare = registers.getValueRegister(toCompare).toInt()
+        val valueToCompare = registersList.getValueRegister(toCompare).toInt()
         if (valueToCompare == 0)
             numberLines = variables.get(dest)!!.numberLines - 1
         return ""
@@ -318,35 +347,35 @@ class InstructionCBZ(instruction: List<String>) : Instruction() {
 
 class InstructionCBNZ(instruction: List<String>) : Instruction() {
     override fun runInstruction(toCompare: String, dest: String): String {
-        val valueToCompare = registers.getValueRegister(toCompare).toInt()
+        val valueToCompare = registersList.getValueRegister(toCompare).toInt()
         if (valueToCompare != 0)
             numberLines = variables.get(dest)!!.numberLines - 1
         return ""
     }
 }
 
-class InstructionBCond(instruction: List<String>) : Instruction() {}
-//LDUR/STUR allow accessing 32/64-bit values when they are not aligned to the size of the operand.
-// For example, a 32-bit value stored at address 0x52.
+
 class InstructionLDUR(instruction: List<String>) : Instruction() {
     override fun runInstruction(dest: String, source1: String, source2: String): String {
         val value = getValueFromPosition(source1, source2)
 
-        registers.setValueRegister(dest, true, value.toString())
+        registersList.setValueRegister(dest, true, value.toString())
         println("NEW VALUE: $value IN $dest")
         return value.toString()
     }
 }
 
-//As of now, I wont touch the offset.
 class InstructionSTUR(instruction: List<String>) : Instruction() {
     override fun runInstruction(source: String, dest: String, offset: String): String {
-        var position = registers.getValueRegister(source).toInt()
+        var position = registersList.getValueRegister(source).toInt()
         position += offset.removePrefix("#").toInt() / 8
-        memArmv8[position] = registers.getValueRegister(source).toByte()
+        memArmv8[position] = registersList.getValueRegister(source).toByte()
         return source + " in " + dest
     }
 }
+
+///TODO FLAGS
+class InstructionBCond(instruction: List<String>) : Instruction() {}
 
 class DecimalRepresentation(instruction: String) {
 
