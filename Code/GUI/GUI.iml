@@ -10,5 +10,6 @@
     <orderEntry type="library" name="KotlinJavaRuntime (3)" level="project" />
     <orderEntry type="library" name="no.tornado:tornadofx:1.7.19" level="project" />
     <orderEntry type="module" module-name="textEmulator" exported="" />
+    <orderEntry type="library" name="junit-4.12" level="project" />
   </component>
 </module>

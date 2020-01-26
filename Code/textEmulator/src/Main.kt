@@ -34,7 +34,7 @@ fun main(args: Array<String>) {
     val fileCode = File(fileName)
     registers.listofRegisters.forEach { print("${it?.nameRegisters}:${it?.valueRegister} \n") }
     println("MEMORY")
-m.showStatus()
+    m.showStatus()
     //   fileCode.writeText(stringInput[0])
 
 }

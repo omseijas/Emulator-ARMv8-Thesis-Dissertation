@@ -13,7 +13,6 @@ class Constants{
         const val AND = "AND"
         const val CBZ = "CBZ"
         const val CBNZ = "CBNZ"
-        const val BCOND = "BCOND"
         const val B = "B"
 
 

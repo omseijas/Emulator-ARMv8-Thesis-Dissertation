@@ -5,14 +5,13 @@ import utils.Constants
 import utils.Registers
 import java.lang.Exception
 
-var memArmv8 = arrayOfNulls<Byte>(4096) //Memory is in bytes.
+var memArmv8 = arrayOfNulls<Byte>(100) //Memory is in bytes.
 var variables = mutableMapOf<String, ARMv8Function>()
 var keyWords = mutableListOf<String>(
     Constants.ADD,
     Constants.ADDI,
     Constants.AND,
     Constants.B,
-    Constants.BCOND,
     Constants.CBNZ,
     Constants.CBZ,
     Constants.EOR,
@@ -26,14 +25,14 @@ var numberLines = 0
 var registersList: Registers = Registers()
 
 fun getValueFromPosition(name: String, off: String): Byte {
-    var position = registersList.getValueRegister(name)
+    var position = registersList.getValueRegister(name).toInt()
 
     var offset = off.removePrefix("#").toInt() / 8
     position += offset
-    return memArmv8.get(position.toInt())!!
+    return memArmv8.get(position)!!
 }
 
-open class Memory() {
+class Memory() {
 
     fun initMemory() {
         for (initializeMemoryAt0 in 0 until memArmv8.size) {
@@ -48,6 +47,13 @@ open class Memory() {
             }
         }
     }
+
+    fun getStatus(): List<Byte> {
+        var memoryList = mutableListOf<Byte>()
+        for (i in 0 until memArmv8.size)
+                memArmv8[i]?.let { memoryList.add(it) }
+        return memoryList
+    }
 }
 
 open class Instruction() {
@@ -55,127 +61,119 @@ open class Instruction() {
     var numberLine: Int = numberLines
     var readAllInput = false
 
-
     fun classify(stringToClassify: String, registers: Registers): String {
         var string = stringToClassify.split(' ')
         var resolution = ""
         var newString: MutableList<String> = mutableListOf()
         var i = 0
         registersList = registers
-        try{
-        when (string[0]) {
-            Constants.ADD -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+        try {
+            when (string[0]) {
+                Constants.ADD -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+                    }
+                    val instructionAdd: InstructionAdd = InstructionAdd(newString)
+                    resolution = instructionAdd.runInstruction(newString[1], newString[2], newString[3])
                 }
-                val instructionAdd: InstructionAdd = InstructionAdd(newString)
-                resolution = instructionAdd.runInstruction(newString[1], newString[2], newString[3])
-            }
-            Constants.ADDI -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+                Constants.ADDI -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+                    }
+                    val instructionAddI: InstructionAddI = InstructionAddI(newString)
+                    resolution = instructionAddI.runInstruction(newString[1], newString[2], newString[3])
                 }
-                val instructionAddI: InstructionAddI = InstructionAddI(newString)
-                resolution = instructionAddI.runInstruction(newString[1], newString[2], newString[3])
-            }
-            Constants.SUB -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+                Constants.SUB -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+                    }
+                    val instructionMult: InstructionSub = InstructionSub(newString)
+                    resolution = instructionMult.runInstruction(newString[1], newString[2], newString[3])
                 }
-                val instructionMult: InstructionSub = InstructionSub(newString)
-                resolution = instructionMult.runInstruction(newString[1], newString[2], newString[3])
-            }
-            Constants.SUBI -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+                Constants.SUBI -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *".toRegex(), "")))
+                    }
+                    val onstruction: InstructionSubI = InstructionSubI(newString)
+                    resolution = onstruction.runInstruction(newString[1], newString[2], newString[3])
                 }
-                val onstruction: InstructionSubI = InstructionSubI(newString)
-                resolution = onstruction.runInstruction(newString[1], newString[2], newString[3])
-            }
-            Constants.LDUR -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                Constants.LDUR -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    val instruction = InstructionLDUR(newString)
+                    resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
                 }
-                val instruction = InstructionLDUR(newString)
-                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
-            }
-            Constants.STDUR -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                Constants.STDUR -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    val instruction = InstructionSTUR(newString)
+                    resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
                 }
-                val instruction = InstructionSTUR(newString)
-                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
-            }
-            Constants.ORR -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
-                }
-                val instruction = InstructionORR(newString)
-                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
-            }
-
-            Constants.EOR -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
-                }
-                val instruction = InstructionEOR(newString)
-                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
-            }
-
-            Constants.AND -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
-                }
-                val instruction = InstructionAND(newString)
-                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
-            }
-            Constants.CBZ -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
-                }
-                val instruction = InstructionCBZ(newString)
-                resolution = instruction.runInstruction(newString[1], newString[2])
-            }
-            Constants.CBNZ -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
-                }
-                val instruction = InstructionCBNZ(newString)
-                resolution = instruction.runInstruction(newString[1], newString[2])
-            }
-            Constants.BCOND -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
-                }
-                val instruction = InstructionSTUR(newString)
-                resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
-            }
-            Constants.B -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
-                }
-                val instruction = InstructionB(newString)
-                resolution = instruction.runInstruction(newString[1])
-            }
-            "" -> {
-
-            }
-            else -> {
-                for (i in 0..string.size - 1) {
-                    newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
-                }
-                if(newString.size == 5){
-                classify(checkForVariable(string), registers)
-                numberLines--}
-                else{
-                    throw Exception("Cadena mal formada:"+string)
+                Constants.ORR -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    val instruction = InstructionORR(newString)
+                    resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
                 }
 
+                Constants.EOR -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    val instruction = InstructionEOR(newString)
+                    resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+                }
+
+                Constants.AND -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    val instruction = InstructionAND(newString)
+                    resolution = instruction.runInstruction(newString[1], newString[2], newString[3])
+                }
+                Constants.CBZ -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    val instruction = InstructionCBZ(newString)
+                    resolution = instruction.runInstruction(newString[1], newString[2])
+                }
+                Constants.CBNZ -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    val instruction = InstructionCBNZ(newString)
+                    resolution = instruction.runInstruction(newString[1], newString[2])
+                }
+                Constants.B -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    val instruction = InstructionB(newString)
+                    resolution = instruction.runInstruction(newString[1])
+                }
+                "" -> {
+
+                }
+                else -> {
+                    for (i in 0..string.size - 1) {
+                        newString.add(i, (string[i].replace(",* *\\[?\\]?".toRegex(), "")))
+                    }
+                    if (newString.size == 5) {
+                        classify(checkForVariable(string), registers)
+                        numberLines--
+                    } else {
+                        throw Exception("Cadena mal formada:" + string)
+                    }
+
+                }
             }
-        }
-        numberLines++
-        numberLine = numberLines}
-        catch (e : Exception){
+            numberLines++
+            numberLine = numberLines
+        } catch (e: Exception) {
             throw Exception(e.message)
         }
         return resolution
@@ -206,12 +204,12 @@ open class Instruction() {
 
     fun checkForVariables(stringInput: MutableList<String>, numberLine: Int) {
         numberLines = numberLine
-        for(i in numberLine until stringInput.size){
-                var string = stringInput[i].split(' ')
-                var resolution = ""
-                var i = 0
-                if (!keyWords.contains(string[0]))
-                    checkForVariable(string)
+        for (i in numberLine until stringInput.size) {
+            var string = stringInput[i].split(' ')
+            var resolution = ""
+            var i = 0
+            if (!keyWords.contains(string[0]))
+                checkForVariable(string)
             numberLines++
 
         }
@@ -226,7 +224,7 @@ open class Instruction() {
             if (stringInput.get(numberLines) != "") {
                 println(classify(stringInput.get(numberLines), registersList))
             }
-     //       numberLines++
+            //       numberLines++
             if (numberLines == stringInput.size)
                 readAllInput = true
         }
@@ -367,10 +365,16 @@ class InstructionLDUR(instruction: List<String>) : Instruction() {
 
 class InstructionSTUR(instruction: List<String>) : Instruction() {
     override fun runInstruction(source: String, dest: String, offset: String): String {
-        var position = registersList.getValueRegister(source).toInt()
-        position += offset.removePrefix("#").toInt() / 8
-        memArmv8[position] = registersList.getValueRegister(source).toByte()
-        return source + " in " + dest
+        try {
+            var position = registersList.getValueRegister(source).toInt()
+            position += offset.removePrefix("#").toInt() / 8
+            memArmv8[position] = registersList.getValueRegister(source).toByte()
+            return source + " in " + dest
+        } catch (e: Exception) {
+            throw  Exception("Parece que estás intentando acceder a una posición de memoria que no existe. Revisa tus instrucciones" +
+                    "de acceso y comprueba que estás dentro de los límites establecidos.")
+        }
+        return  ""
     }
 }
 

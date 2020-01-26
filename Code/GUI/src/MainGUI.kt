@@ -21,14 +21,13 @@ import java.io.PrintWriter
 
 
 var registers: Registers = Registers()
-
+var memory: Memory = Memory()
 var stringInput = mutableListOf<String>()
 var textArea = TextArea()
 var checked = false
-val contador = SimpleStringProperty()
-val code = SimpleStringProperty()
+var instructionExecuted = SimpleStringProperty()
 
-class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
+class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
 
     val controller: USCLEGController by inject()
     override val root = vbox() {
@@ -67,54 +66,67 @@ class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
 
         }
         splitpane(Orientation.VERTICAL) {
-            // addClass(ARMv8Style.tackyButton)
             gridpane() {
                 vgap = 20.0
                 row() {
-                    //    hgap = 100.0
-
-                    //   vgap = 200.0
                     textarea {
                         textArea = this
                         prefRowCount = 200
                         setPrefSize(2000.0, 2000.0)
                         vgrow = Priority.ALWAYS
-
-                        //                 bind(observableListOf(stringInput))
-                        //                  textProperty().bind(.textPropecty())
                     }
                 }
             }
-            gridpane() {
-                addClass(ARMv8Style.tackyButton)
+            gridpane(){
                 gridpaneConstraints {
-                    paddingLeft = 10.0
+                    alignment = Pos.CENTER
                 }
-
+                addClass(ARMv8Style.tackyButton)
                 row() {
-                    label("Registros") {
-                        style {
-                            fontWeight = FontWeight.EXTRA_BOLD
-                            fontSize = 20.px
-                            //   fontFamily = "AnonymousPro-Bold"
+                    label(instructionExecuted)
+                }
+            }
+            hbox {
+                gridpane() {
+                    addClass(ARMv8Style.tackyButton)
+                    gridpaneConstraints {
+                        paddingLeft = 10.0
+                    }
 
+                    row() {
+                        label("Memoria utilizada") {
+                            setHalignment(this, HPos.CENTER)
                         }
-                        setHalignment(this, HPos.CENTER)
+                    }
+                    row {
+                        addClass(ARMv8Style.tackyButton)
+                        listview(controller.memarmv8) {
+                            setPrefSize(2000.0, 2000.0)
+                            addClass(ARMv8Style.tackyButton)
+                        }
                     }
                 }
-                row {
+                gridpane{
+                    addClass(ARMv8Style.tackyButton)
+                    gridpaneConstraints {
+                        paddingLeft = 10.0
+                    }
+                    row() {
+                        label("Registros") {
+                            setHalignment(this, HPos.CENTER)
+                        }
+                    }
+                    row {
 
-                    stackpane {
                         addClass(ARMv8Style.tackyButton)
                         listview(controller.values) {
                             setPrefSize(2000.0, 2000.0)
                             addClass(ARMv8Style.tackyButton)
                         }
-                        label() {
-                            bind(contador)
-                        }
                     }
                 }
+
+
             }
         }
 
@@ -127,13 +139,8 @@ class HelloWorld : View("USCLEGv8 - An ARMv8 Emulator") {
 class USCLEGController : Controller() {
     var numberLine = 0
     var instructions = Instruction()
-    var m = Memory().initMemory()
-    fun increment() {
-        contador
-//        values.set(0,values.get(0)+"x")
-        println(registers.getValues())
-    }
-
+    var memarmv8=  FXCollections.observableArrayList(memory.getStatus())
+    var values = FXCollections.observableArrayList(registers.getValues())
 
     fun execute() {
         stringInput = textArea.text.split("\n").toMutableList()
@@ -149,6 +156,7 @@ class USCLEGController : Controller() {
                 instructions.classifyAllInput(stringInput, registers)
                 values.setAll(registers.getValues())
                 registers.getValues().forEach { println(it) }
+                memarmv8.setAll(memory.getStatus())
             } catch (e: Exception) {
                 alert(Alert.AlertType.ERROR, "Se ha producido un error inesperado", e.message)
             }
@@ -177,6 +185,7 @@ class USCLEGController : Controller() {
                     instructions.numberLine = 0
                 }
                 instructions.classify(stringInput[numberLine], registers)
+                instructionExecuted.setValue(("Instrucción ejecutada: "+stringInput[numberLine]))
                 if (numberLine == instructions.numberLine)
                     numberLine++
                 else
@@ -184,7 +193,7 @@ class USCLEGController : Controller() {
             }
         }
         values.setAll(registers.getValues())
-
+        memarmv8.setAll(memory.getStatus())
     }
 
     fun stop() {
@@ -193,6 +202,8 @@ class USCLEGController : Controller() {
         instructions = Instruction()
         instructions.reset()
         values.setAll(registers.getValues())
+        memory.initMemory()
+        memarmv8.setAll(memory.getStatus())
 
     }
 
@@ -202,17 +213,18 @@ class USCLEGController : Controller() {
         hostServices.showDocument(file.absolutePath)
     }
 
-    var values = FXCollections.observableArrayList(registers.getValues())
+
 
 }
 
-class HelloWorldApp : App(HelloWorld::class, ARMv8Style::class) {
+class HelloWorldApp : App(ARMv8View::class, ARMv8Style::class) {
     init {
         reloadStylesheetsOnFocus()
     }
 
     override fun start(stage: Stage) {
         super.start(stage)
+        memory.initMemory()
         stage.width = Screen.getPrimary().visualBounds.width
         stage.height = Screen.getPrimary().visualBounds.height
     }
@@ -234,6 +246,8 @@ class ARMv8Style : Stylesheet() {
         s(label, button) {
             textFill = c("#FFFFFF")
             opacity = 0.87
+            fontWeight = FontWeight.EXTRA_BOLD
+            fontSize = 16.px
         }
         s(tackyButton, button) {
             borderColor += box(Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE)
