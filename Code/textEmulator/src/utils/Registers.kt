@@ -44,7 +44,7 @@ class Registers {
     fun getValues(): List<String> {
         var valuelistregisters = mutableListOf<String>()
         for(i in listofRegisters)
-            valuelistregisters.add(i!!.nameRegisters +" "+i!!.valueRegister)
+            valuelistregisters.add(i!!.nameRegisters +" -> "+i!!.valueRegister)
         return valuelistregisters
     }
 

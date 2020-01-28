@@ -30,11 +30,9 @@ var instructionExecuted = SimpleStringProperty()
 class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
 
     val controller: USCLEGController by inject()
-    override val root = vbox() {
-        // addClass(ARMv8Style.tackyButton)
-        //   children.asSequence().forEach { it.addClass(ARMv8Style.tackyButton)}
+    override val root = vbox {
         menubar {
-            addClass(ARMv8Style.tackyButton)
+            addClass(ARMv8Style.custom)
             menu("Archivo") {
                 // addClass(ARMv8Style.tackyButton)
                 item("Abrir", "Ctrl+A").action { openFile() }
@@ -51,11 +49,12 @@ class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
         }
 
         gridpane {
-            addClass(ARMv8Style.tackyButton)
+            addClass(ARMv8Style.custom)
             gridpaneConstraints {
                 alignment = Pos.CENTER_RIGHT
             }
             row {
+
                 button("Abrir").action { openFile() }
                 button("Guardar").action { saveFile() }
                 button("Ejecutar").action { controller.execute() }
@@ -66,7 +65,7 @@ class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
 
         }
         splitpane(Orientation.VERTICAL) {
-            gridpane() {
+            gridpane{
                 vgap = 20.0
                 row() {
                     textarea {
@@ -77,51 +76,51 @@ class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
                     }
                 }
             }
-            gridpane(){
+            gridpane{
                 gridpaneConstraints {
                     alignment = Pos.CENTER
                 }
-                addClass(ARMv8Style.tackyButton)
+                addClass(ARMv8Style.custom)
                 row() {
                     label(instructionExecuted)
                 }
             }
             hbox {
-                gridpane() {
-                    addClass(ARMv8Style.tackyButton)
+                gridpane {
+                    addClass(ARMv8Style.custom)
                     gridpaneConstraints {
                         paddingLeft = 10.0
                     }
 
-                    row() {
+                    row {
                         label("Memoria utilizada") {
                             setHalignment(this, HPos.CENTER)
                         }
                     }
                     row {
-                        addClass(ARMv8Style.tackyButton)
+                        addClass(ARMv8Style.custom)
                         listview(controller.memarmv8) {
                             setPrefSize(2000.0, 2000.0)
-                            addClass(ARMv8Style.tackyButton)
+                            addClass(ARMv8Style.custom)
                         }
                     }
                 }
                 gridpane{
-                    addClass(ARMv8Style.tackyButton)
+                    addClass(ARMv8Style.custom)
                     gridpaneConstraints {
                         paddingLeft = 10.0
                     }
-                    row() {
+                    row {
                         label("Registros") {
                             setHalignment(this, HPos.CENTER)
                         }
                     }
                     row {
 
-                        addClass(ARMv8Style.tackyButton)
+                        addClass(ARMv8Style.custom)
                         listview(controller.values) {
                             setPrefSize(2000.0, 2000.0)
-                            addClass(ARMv8Style.tackyButton)
+                            addClass(ARMv8Style.custom)
                         }
                     }
                 }
@@ -172,7 +171,7 @@ class USCLEGController : Controller() {
                 "No es posible ejecutar código, ya que no hay código que ejecutar. Por favor, introduce el código que deseas ejecutar."
             )
         else {
-            if (numberLine >= stringInput.size)
+            if (numberLine == stringInput.size)
                 alert(
                     Alert.AlertType.INFORMATION,
                     "Código ejecutado completamente",
@@ -217,7 +216,7 @@ class USCLEGController : Controller() {
 
 }
 
-class HelloWorldApp : App(ARMv8View::class, ARMv8Style::class) {
+class ARMv8App : App(ARMv8View::class, ARMv8Style::class) {
     init {
         reloadStylesheetsOnFocus()
     }
@@ -232,15 +231,12 @@ class HelloWorldApp : App(ARMv8View::class, ARMv8Style::class) {
 
 class ARMv8Style : Stylesheet() {
     companion object {
-        val tackyButton by cssclass()
-        private val topColor = Color.RED
-        private val rightColor = Color.DARKGREEN
-        private val leftColor = Color.ORANGE
-        private val bottomColor = Color.PURPLE
+        val custom by cssclass()
+
     }
 
     init {
-        s(root, button, menu, content, contextMenu, cell, tackyButton) {
+        s(root, button, menu, content, contextMenu, cell, custom) {
             backgroundColor += c("#121212")
         }
         s(label, button) {
@@ -249,7 +245,7 @@ class ARMv8Style : Stylesheet() {
             fontWeight = FontWeight.EXTRA_BOLD
             fontSize = 16.px
         }
-        s(tackyButton, button) {
+        s(custom, button) {
             borderColor += box(Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE)
         }
         s(textArea, cell) {

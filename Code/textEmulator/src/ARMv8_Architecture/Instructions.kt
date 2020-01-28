@@ -5,7 +5,7 @@ import utils.Constants
 import utils.Registers
 import java.lang.Exception
 
-var memArmv8 = arrayOfNulls<Byte>(100) //Memory is in bytes.
+var memArmv8 = arrayOfNulls<Byte>(5120) //Memory is in bytes.
 var variables = mutableMapOf<String, ARMv8Function>()
 var keyWords = mutableListOf<String>(
     Constants.ADD,
@@ -48,10 +48,10 @@ class Memory() {
         }
     }
 
-    fun getStatus(): List<Byte> {
-        var memoryList = mutableListOf<Byte>()
+    fun getStatus(): List<String> {
+        var memoryList = mutableListOf<String>()
         for (i in 0 until memArmv8.size)
-                memArmv8[i]?.let { memoryList.add(it) }
+                memArmv8[i]?.let { memoryList.add("Posición: "+i+", valor:"+it) }
         return memoryList
     }
 }
@@ -225,7 +225,7 @@ open class Instruction() {
                 println(classify(stringInput.get(numberLines), registersList))
             }
             //       numberLines++
-            if (numberLines == stringInput.size)
+            if (numberLines == stringInput.size-1)
                 readAllInput = true
         }
     }
