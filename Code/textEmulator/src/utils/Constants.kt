@@ -1,5 +1,5 @@
 package utils
-
+/*En esta clase estan las constantes del conjunto de instrucciones del emulador.*/
 class Constants{
     companion object{
         const val ADD = "ADD"

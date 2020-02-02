@@ -1,4 +1,4 @@
-import ARMv8_Architecture.Instruction
+/*import ARMv8_Architecture.Instruction
 import ARMv8_Architecture.Memory
 import utils.Registers
 import java.io.File
@@ -16,12 +16,6 @@ fun main(args: Array<String>) {
     var initializeMemoryAt0=0
     val m = Memory();
     m.initMemory()
-    File("C:\\Users\\Zezão\\Desktop\\Manu\\Trabajo-de-fin-de-grado\\Code\\textEmulator\\src\\test.txt").forEachLine {
-        stringInput.add(
-            it
-        )
-    }
-    println("Has introducido: $stringInput")
     val i = Instruction()
     var j =0
     try {
@@ -38,3 +32,4 @@ fun main(args: Array<String>) {
     //   fileCode.writeText(stringInput[0])
 
 }
+*/

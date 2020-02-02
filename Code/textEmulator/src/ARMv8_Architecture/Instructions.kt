@@ -5,6 +5,8 @@ import utils.Constants
 import utils.Registers
 import java.lang.Exception
 
+/*En este fichero se encuentra la gestion de instrucciones del emulador asi como tambien la gestion de memoria virtual.*/
+
 var memArmv8 = arrayOfNulls<Byte>(5120) //Memory is in bytes.
 var variables = mutableMapOf<String, ARMv8Function>()
 var keyWords = mutableListOf<String>(
@@ -30,6 +32,25 @@ fun getValueFromPosition(name: String, off: String): Byte {
     var offset = off.removePrefix("#").toInt() / 8
     position += offset
     return memArmv8.get(position)!!
+}
+
+class MemoryManagement(){
+    var memory = memArmv8
+    var registers = registersList
+
+    fun setValueRegisters(name: String, status: Boolean, value: String){
+        registers.setValueRegister(name, status, value)
+    }
+
+    fun getValueRegister(name:String):String{
+        return registers.getValueRegister(name)
+    }
+
+    fun getValueRegisters():List<String>{
+        return registers.getValues()
+    }
+
+
 }
 
 class Memory() {
@@ -231,11 +252,11 @@ open class Instruction() {
     }
 
     open fun runInstruction(dest: String): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return ""
     }
 
     open fun runInstruction(toCompare: String, dest: String): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return ""
     }
 
     fun reset() {

@@ -1,5 +1,7 @@
 import ARMv8_Architecture.Instruction
 import ARMv8_Architecture.Memory
+import ARMv8_Architecture.MemoryManagement
+import Model.FileManagement
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import javafx.geometry.HPos
@@ -11,13 +13,12 @@ import javafx.scene.layout.GridPane.setHalignment
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
-import javafx.stage.FileChooser
 import javafx.stage.Screen
 import javafx.stage.Stage
 import tornadofx.*
 import utils.Registers
 import java.io.File
-import java.io.PrintWriter
+import java.nio.file.Paths
 
 
 var registers: Registers = Registers()
@@ -27,6 +28,13 @@ var textArea = TextArea()
 var checked = false
 var instructionExecuted = SimpleStringProperty()
 
+//**En este fichero se encuentran las clases asociadas a la vista:
+// -ARMv8View: en la que se encuentra la estructura de la GUI
+// -ARMv8App: donde se inicializa la aplicaciºon
+// -ARMv8Style: donde se encuentran los distintos estilos aplicados a la GUI
+// En esta clase tambien se encuentra el controlador: USCLEGController, que redirige la logica al modelo.
+// *//
+
 class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
 
     val controller: USCLEGController by inject()
@@ -35,8 +43,8 @@ class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
             addClass(ARMv8Style.custom)
             menu("Archivo") {
                 // addClass(ARMv8Style.tackyButton)
-                item("Abrir", "Ctrl+A").action { openFile() }
-                item("Guardar", "Ctrl+G").action { saveFile() }
+                item("Abrir", "Ctrl+A").action { controller.openFile() }
+                item("Guardar", "Ctrl+G").action { controller.saveFile() }
             }
             menu("Ejecutar") {
                 item("Ejecutar", "Ctrl+E").action { controller.execute() }
@@ -55,8 +63,8 @@ class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
             }
             row {
 
-                button("Abrir").action { openFile() }
-                button("Guardar").action { saveFile() }
+                button("Abrir").action { controller.openFile() }
+                button("Guardar").action { controller.saveFile() }
                 button("Ejecutar").action { controller.execute() }
                 button("Paso a paso").action { controller.executeStepByStep() }
                 button("Reiniciar").action { controller.stop() }
@@ -138,9 +146,16 @@ class ARMv8View : View("USCLEGv8 - An ARMv8 Emulator") {
 class USCLEGController : Controller() {
     var numberLine = 0
     var instructions = Instruction()
+    var memoryManager = MemoryManagement()
     var memarmv8=  FXCollections.observableArrayList(memory.getStatus())
     var values = FXCollections.observableArrayList(registers.getValues())
-
+    var fileManagement = FileManagement()
+    fun openFile(){
+        fileManagement.openFile()
+    }
+    fun saveFile(){
+        fileManagement.saveFile()
+    }
     fun execute() {
         stringInput = textArea.text.split("\n").toMutableList()
         if (stringInput.size == 0)
@@ -207,9 +222,9 @@ class USCLEGController : Controller() {
     }
 
     fun openHelp() {
-        val file = File("C:\\Users\\Zezão\\Desktop\\Manu\\Trabajo-de-fin-de-grado\\Code\\textEmulator\\src\\test.pdf")
+        var file = File(Paths.get("").toAbsolutePath().toString()+"\\TFG_Orquidea_Manuela_Seijas_Salinas.pdf")
         val hostServices = hostServices
-        hostServices.showDocument(file.absolutePath)
+        hostServices.showDocument(file.path)
     }
 
 
@@ -255,34 +270,3 @@ class ARMv8Style : Stylesheet() {
     }
 }
 
-fun openFile() {
-    val fileChooser = FileChooser()
-    val selectedFile = fileChooser.showOpenDialog(null)
-    if (selectedFile != null) {
-
-        File(selectedFile.absolutePath).forEachLine {
-            stringInput.add(
-                it
-            )
-        }
-        stringInput.forEach { textArea.appendText(it + "\n") }
-
-    } else {
-        println("File selection cancelled.");
-    }
-
-}
-
-fun saveFile() {
-    val fileChooser = FileChooser()
-    val extensionFilterArmv8 = FileChooser.ExtensionFilter("Archivos TXT (*.txt)", "*.txt")
-    fileChooser.extensionFilters.add(extensionFilterArmv8)
-    val selectedFile = fileChooser.showSaveDialog(null)
-    if (selectedFile != null) {
-        var writer = PrintWriter(selectedFile)
-        writer.println(textArea.text)
-        writer.close()
-    } else {
-        println("File selection cancelled.");
-    }
-}
